@@ -62,8 +62,7 @@ public abstract class SyncHttpClient extends AsyncHttpClient {
 		/*
 		 * will execute the request directly
 		 */
-		new AsyncHttpRequest(client, httpContext, uriRequest, responseHandler)
-				.run();
+		new AsyncHttpRequest(client, httpContext, uriRequest, responseHandler).run();
 	}
 
 	public abstract String onRequestFailed(Throwable error, String content);

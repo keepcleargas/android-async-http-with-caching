@@ -95,6 +95,7 @@ public class BinaryHttpResponseHandler extends AsyncHttpResponseHandler {
     public void onSuccess(int statusCode, byte[] binaryData) {
         onSuccess(binaryData);
     }
+    
 
     /**
      * Fired when a request fails to complete, override to handle in your own code

@@ -18,6 +18,8 @@
 
 package com.loopj.android.http;
 
+import android.content.Context;
+import android.net.http.HttpResponseCache;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -29,6 +31,8 @@ import org.apache.http.entity.BufferedHttpEntity;
 import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.security.NoSuchAlgorithmException;
 
 /**
  * Used to intercept and handle the responses from requests made using 
@@ -72,6 +76,10 @@ public class AsyncHttpResponseHandler {
     protected static final int FINISH_MESSAGE = 3;
 
     private Handler handler;
+    
+    private Context mContext;
+    private Boolean mCacheRequest = false;
+    private String mURL;
 
     /**
      * Creates a new AsyncHttpResponseHandler
@@ -87,7 +95,24 @@ public class AsyncHttpResponseHandler {
         }
     }
 
-
+    public AsyncHttpResponseHandler(Context context,boolean cacheRequest) {
+    	this();
+    	mContext = context;
+    	mCacheRequest=cacheRequest;
+    }
+    
+    public Context getAppContex(){
+    	return mContext;
+    }
+    
+    public boolean isForcedToReadFromCacheEnabled(){
+    	return mCacheRequest;
+    }
+    
+    public void setUrl(String url){
+    	mURL = url;
+    }
+    
     //
     // Callbacks to be overridden, typically anonymously
     //
@@ -106,15 +131,18 @@ public class AsyncHttpResponseHandler {
      * Fired when a request returns successfully, override to handle in your own code
      * @param content the body of the HTTP response from the server
      */
-    public void onSuccess(String content) {}
+    public void onSuccess(String content) {
+    	
+    }
 
     /**
      * Fired when a request returns successfully, override to handle in your own code
      * @param statusCode the status code of the response
      * @param content the body of the HTTP response from the server
      */
-    public void onSuccess(int statusCode, String content) {
-        onSuccess(content);
+    public void onSuccess(int statusCode, String content,boolean isFromCache) {
+
+    		onSuccess(content);    		
     }
 
     /**
@@ -164,8 +192,10 @@ public class AsyncHttpResponseHandler {
     // Pre-processing of messages (in original calling thread, typically the UI thread)
     //
 
-    protected void handleSuccessMessage(int statusCode, String responseBody) {
-        onSuccess(statusCode, responseBody);
+    
+    protected void handleSuccessMessage(int statusCode, String responseBody,boolean isFromCache) {
+    	
+        onSuccess(statusCode, responseBody,isFromCache);
     }
 
     protected void handleFailureMessage(Throwable e, String responseBody) {
@@ -181,7 +211,12 @@ public class AsyncHttpResponseHandler {
         switch(msg.what) {
             case SUCCESS_MESSAGE:
                 response = (Object[])msg.obj;
-                handleSuccessMessage(((Integer) response[0]).intValue(), (String) response[1]);
+				try {
+					CacheManager.cacheData(mContext, ((String) response[1]).getBytes() ,CacheManager.SHA1(mURL));
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+                handleSuccessMessage(((Integer) response[0]).intValue(), (String) response[1],false);
                 break;
             case FAILURE_MESSAGE:
                 response = (Object[])msg.obj;

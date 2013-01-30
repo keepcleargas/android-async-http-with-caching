@@ -20,7 +20,9 @@ package com.loopj.android.http;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -335,7 +337,28 @@ public class AsyncHttpClient {
      * @param responseHandler the response handler instance that should handle the response.
      */
     public void get(Context context, String url, RequestParams params, AsyncHttpResponseHandler responseHandler) {
-        sendRequest(httpClient, httpContext, new HttpGet(getUrlWithQueryString(url, params)), null, responseHandler, context);
+
+    	String completeUrl = getUrlWithQueryString(url, params);
+    	
+    	responseHandler.setUrl(completeUrl);
+    	
+    	if(responseHandler.isForcedToReadFromCacheEnabled()){
+    		
+    		byte[] dataFromCache = null;
+    		
+    		try {
+    			dataFromCache = CacheManager.retrieveData(responseHandler.getAppContex(), CacheManager.SHA1(completeUrl));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+    		
+    		if(dataFromCache!=null){
+    			responseHandler.handleSuccessMessage(2000, new String(dataFromCache) ,true);
+    			return;
+    		}
+    	}
+    	
+    	sendRequest(httpClient, httpContext, new HttpGet(getUrlWithQueryString(url, params)), null, responseHandler, context);
     }
     
     /**
@@ -349,13 +372,34 @@ public class AsyncHttpClient {
      *        the response.
      */
     public void get(Context context, String url, Header[] headers, RequestParams params, AsyncHttpResponseHandler responseHandler) {
-        HttpUriRequest request = new HttpGet(getUrlWithQueryString(url, params));
+    	
+    	String completeUrl = getUrlWithQueryString(url, params);
+    	
+    	responseHandler.setUrl(completeUrl);
+    	
+    	if(responseHandler.isForcedToReadFromCacheEnabled()){
+    		
+    		byte[] dataFromCache = null;
+    		
+    		try {
+    			dataFromCache = CacheManager.retrieveData(responseHandler.getAppContex(), CacheManager.SHA1(completeUrl));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+    		
+    		if(dataFromCache!=null){
+    			responseHandler.handleSuccessMessage(2000, new String(dataFromCache) ,true);
+    			return;
+    		}
+    	}
+
+
+    	HttpUriRequest request = new HttpGet(completeUrl);
         if(headers != null) request.setHeaders(headers);
-        sendRequest(httpClient, httpContext, request, null, responseHandler,
-                context);
+        sendRequest(httpClient, httpContext, request, null, responseHandler, context);
     }
 
-
+    
     //
     // HTTP POST Requests
     //
