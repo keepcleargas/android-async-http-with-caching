@@ -16,7 +16,7 @@ Features
 - Automatic **gzip** response decoding support for super-fast requests
 - Optional built-in response parsing into **JSON** (JsonHttpResponseHandler)
 - Optional **persistent cookie store**, saves cookies into your app's SharedPreferences
-
+- Added request caching for offline requests
 
 Documentation, Features and Examples
 ------------------------------------
